@@ -1,6 +1,5 @@
 package domain
 
-import state.given
 import ports.ServerComunicationProtocol.*
 import domain.LightSensor.LightSensorStateImpl.*
 import state.given
@@ -13,7 +12,12 @@ import state.given
   * @param updateRate
   *   The rate of calling the light sensor step() function and so updating the server
   */
-class LightSensorAgent(serverProtocol: ServerComunicationProtocol, lightSensor: LightSensor, periodMs: Long, updateRate: Long) extends Thread:
+class LightSensorAgent(serverProtocol: ServerComunicationProtocol, val lightSensor: LightSensor, periodMs: Long, updateRate: Long) extends Thread:
+
+  private var _currentLightState = initialState
+
+  def currentLightState: domain.LightSensor.LightSensorStateImpl.LightSensorState = _currentLightState
+  private def currentLightState_=(s: LightSensorState) = _currentLightState = s
 
   private var serverAddress: Option[ServerAddress] = None
 
@@ -31,25 +35,22 @@ class LightSensorAgent(serverProtocol: ServerComunicationProtocol, lightSensor: 
   private var timePassed: Long = 0
 
   override def run(): Unit =
-    _run(initialState)
-
-  private def _run(s: LightSensorState): Unit =
-    if !shouldStop then
+    while !shouldStop do
       Thread.sleep(periodMs)
       timePassed = timePassed + periodMs
       if timePassed >= updateRate
       then
         timePassed = 0
-        val state = 
+        val getStateAndEvent = 
           for
             e <- step()
             s <- currentState
           yield (e, s)
 
-        val computation = state.run(s)
-        val event = computation._2._1
-        val newState = computation._2._2
+        val stateAndEvent = getStateAndEvent.run(currentLightState)
+        currentLightState = stateAndEvent._1
+
+        val event = stateAndEvent._2._1
+        val newState = stateAndEvent._2._2
         this.serverAddress.foreach(this.serverProtocol.updateState(_, newState))
         this.serverAddress.foreach(this.serverProtocol.sendEvent(_, event))
-        println("State: " + newState)
-        _run(computation._1)

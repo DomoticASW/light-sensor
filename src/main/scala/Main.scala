@@ -6,6 +6,7 @@ import domain.LightSensorAgent
 import org.apache.pekko.actor.typed.ActorSystem
 import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import adapters.ServerComunicationProtocolHttpAdapter
+import adapters.DomoticASWDeviceHttpInterface
 
 object Main extends App:
   object isInt:
@@ -70,4 +71,4 @@ object Main extends App:
       sensorAgent.start()
 
       given ActorSystem[Any] = ActorSystem(Behaviors.empty, "system")
-      
+      DomoticASWDeviceHttpInterface("0.0.0.0", port, sensorAgent)

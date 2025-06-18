@@ -5,9 +5,9 @@ import domain.LightSensor.Event
 import domain.LightSensor.LightState
 import domain.LightSensor.Event
 import state.State
-import domain.LightSensor.LightSensorState
+import domain.LightSensor.LightSensorOps
 
-trait LightSensor extends LightSensorState:
+trait LightSensor extends LightSensorOps:
   def id: String
   def name: String
 
@@ -27,13 +27,13 @@ object LightSensor:
     case IsDark
     case IsDimLight
 
-  private case class LightSensorImpl(id: String, name: String) extends LightSensor with LightSensorState
+  private case class LightSensorImpl(id: String, name: String) extends LightSensor with LightSensorOps
 
   def apply(id: String, name: String): LightSensor = LightSensorImpl(id, name)
 
-  trait LightSensorState:
+  trait LightSensorOps:
     import LightState.*
-    opaque type LightSensorState = (LightState, LightState)
+    import LightSensorStateImpl.*
 
     def initialState: LightSensorState = (Light, DimLight)
     def currentState: State[LightSensorState, LightState] =
@@ -58,4 +58,5 @@ object LightSensor:
           case (actual, prev) => ((prev, actual), IsDimLight)
       )
 
-  object LightSensorStateImpl extends LightSensorState
+  object LightSensorStateImpl extends LightSensorOps:
+    type LightSensorState = (LightState, LightState)
