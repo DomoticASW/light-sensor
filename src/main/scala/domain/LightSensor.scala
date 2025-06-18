@@ -32,6 +32,7 @@ object LightSensor:
   def apply(id: String, name: String): LightSensor = LightSensorImpl(id, name)
 
   trait LightSensorState:
+    export this.*
     import LightState.*
     opaque type LightSensorState = (LightState, LightState)
 
@@ -58,3 +59,4 @@ object LightSensor:
           case (actual, prev) => ((prev, actual), IsDimLight)
       )
 
+  object LightSensorStateImpl extends LightSensorState
