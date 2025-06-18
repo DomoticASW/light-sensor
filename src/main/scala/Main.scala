@@ -1,10 +1,11 @@
-import domain.LightSensor.*
-import LightSensorStateImpl.*
-import state.given
 import ports.ServerComunicationProtocol.ServerAddress
 import domain.ConfigChecker
 import scala.concurrent.ExecutionContext
 import domain.LightSensor
+import domain.LightSensorAgent
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import adapters.ServerComunicationProtocolHttpAdapter
 
 object Main extends App:
   object isInt:
@@ -60,6 +61,13 @@ object Main extends App:
     case Right((config, port, serverAddress)) =>
       val id = config.id
       val name = config.name
+      val updateRate = config.updateRate
       val ec = ExecutionContext.global
 
       val sensor = LightSensor(id, name)
+      val sensorAgent = LightSensorAgent(new ServerComunicationProtocolHttpAdapter(id)(using ec), sensor, 50, updateRate)
+      serverAddress.foreach(sensorAgent.registerToServer(_))
+      sensorAgent.start()
+
+      given ActorSystem[Any] = ActorSystem(Behaviors.empty, "system")
+      
