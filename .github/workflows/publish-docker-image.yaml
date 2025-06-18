@@ -24,7 +24,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: ${{ vars.DOCKERHUB_USERNAME_CORRADO }}
-          password: ${{ secrets.DOCKERHUB_SECRET_MUSIC_PLAYER }}
+          password: ${{ secrets.DOCKERHUB_SECRET_LIGHT_SENSOR }}
 
       - name: Run sbt Docker/publish
         run: VERSION=${{github.event.release.tag_name}} sbt Docker/publish
@@ -33,6 +33,6 @@ jobs:
         uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae # v4.0.0
         with:
           username: ${{ vars.DOCKERHUB_USERNAME_CORRADO }}
-          password: ${{ secrets.DOCKERHUB_SECRET_MUSIC_PLAYER }}
+          password: ${{ secrets.DOCKERHUB_SECRET_LIGHT_SENSOR }}
           repository: ${{ vars.DOCKERHUB_USERNAME_CORRADO }}/domoticasw-light-sensor
           short-description: A Music player device simulated for DomoticASW
