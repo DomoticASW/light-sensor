@@ -103,7 +103,7 @@ class ServerComunicationProtocolHttpAdapter(
   case class AnnounceMessage(
       id: String,
       name: String,
-      announcePort: Int
+      port: Int
   ) derives Writer
 
   override def announce(): Unit =
