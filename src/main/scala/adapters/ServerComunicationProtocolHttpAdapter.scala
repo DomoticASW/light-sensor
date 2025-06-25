@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets
 class ServerComunicationProtocolHttpAdapter(
     id: String,
     name: String,
+    clientPort: Int,
     announcePort: Int,
     discoveryBroadcastAddress: String
 )(using ExecutionContext)
@@ -109,7 +110,7 @@ class ServerComunicationProtocolHttpAdapter(
     Using(DatagramSocket()): socket =>
       socket.setBroadcast(true)
       val data =
-        write(AnnounceMessage(id, name, announcePort))
+        write(AnnounceMessage(id, name, clientPort))
           .getBytes(StandardCharsets.UTF_8)
       val broadcastAddress = InetAddress.getByName(discoveryBroadcastAddress)
       val packet = new DatagramPacket(

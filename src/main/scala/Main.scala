@@ -101,6 +101,7 @@ object Main extends App:
         new ServerComunicationProtocolHttpAdapter(
           id,
           name = name,
+          clientPort = port,
           announcePort = serverDiscoveryPort,
           discoveryBroadcastAddress = discoveryBroadcastAddress
         )(using ec),
