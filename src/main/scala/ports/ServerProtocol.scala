@@ -10,3 +10,4 @@ object ServerComunicationProtocol:
   trait ServerComunicationProtocol:
     def updateState(address: ServerAddress, state: LightState): Future[Unit]
     def sendEvent(address: ServerAddress, e: Event): Future[Unit]
+    def announce(): Unit

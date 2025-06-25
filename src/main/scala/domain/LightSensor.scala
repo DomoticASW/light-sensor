@@ -18,16 +18,18 @@ object LightSensor:
     case Dark
 
     def name: String = this match
-      case Light => "Light"
+      case Light    => "Light"
       case DimLight => "Dim light"
-      case Dark => "Dark"
+      case Dark     => "Dark"
 
   enum Event:
     case IsLight
     case IsDark
     case IsDimLight
 
-  private case class LightSensorImpl(id: String, name: String) extends LightSensor with LightSensorOps
+  private case class LightSensorImpl(id: String, name: String)
+      extends LightSensor
+      with LightSensorOps
 
   def apply(id: String, name: String): LightSensor = LightSensorImpl(id, name)
 
@@ -39,23 +41,24 @@ object LightSensor:
     def currentState: State[LightSensorState, LightState] =
       State(s => (s, s._1))
 
-    /**
-      * Change the state of the light sensor, meaning it detects changes on the environment light
-      * e.g. => If there is light, after step() there is dimLight
-      * 
-      * It creates an infinite change of light state: Light -> DimLight -> Dark -> DimLight -> Light
+    /** Change the state of the light sensor, meaning it detects changes on the
+      * environment light e.g. => If there is light, after step() there is
+      * dimLight
+      *
+      * It creates an infinite change of light state: Light -> DimLight -> Dark
+      * -> DimLight -> Light
       *
       * @return
-      *   The new state with the relative Event.
-      *   Possible events are: IsDark, IsLight, IsDimLight
+      *   The new state with the relative Event. Possible events are: IsDark,
+      *   IsLight, IsDimLight
       */
     def step(): State[LightSensorState, Event] =
       import Event.*
       State(s =>
         s match
-          case (actual, Dark) => ((Light, actual), IsLight)
+          case (actual, Dark)  => ((Light, actual), IsLight)
           case (actual, Light) => ((Dark, actual), IsDark)
-          case (actual, prev) => ((prev, actual), IsDimLight)
+          case (actual, prev)  => ((prev, actual), IsDimLight)
       )
 
   object LightSensorStateImpl extends LightSensorOps:

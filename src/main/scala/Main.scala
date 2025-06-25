@@ -9,6 +9,9 @@ import adapters.ServerComunicationProtocolHttpAdapter
 import adapters.DomoticASWDeviceHttpInterface
 
 object Main extends App:
+  def parse(envVar: String)(default: String): Right[Nothing, String] =
+    Right(sys.env.getOrElse(envVar, default))
+
   object isInt:
     def unapply(s: String): Option[Int] = s.toIntOption
 
@@ -34,39 +37,78 @@ object Main extends App:
       case Some(isInt(p)) => Left(s"Invalid port $p is out of valid port range")
       case Some(nonInt)   => Left(s"Invalid port $nonInt is not an integer")
 
-  def id: Either[String, String] = Right(sys.env.get("ID").getOrElse("light-sensor"))
-  def lightSensorName: Either[String, String] = Right(sys.env.get("NAME").getOrElse("Light Sensor"))
-
   def updateRate: Either[String, Long] =
     for
       updateRateStr <- Right(sys.env.get("UPDATE_RATE"))
       updateRate <- updateRateStr match
-        case None => Right(2000l)
+        case None => Right(2000L)
         case Some(value) =>
           value.toLongOption.toRight("Update rate should be an integer")
     yield updateRate
 
+  def serverDiscoveryPort(default: Int): Either[String, Int] =
+    val envVar = "SERVER_DISCOVERY_PORT"
+    for
+      str <- sys.env.get(envVar) match
+        case None        => Right(default.toString())
+        case Some(value) => Right(value)
+      port <- str.toIntOption match
+        case None => Left(s"Invalid port $str is not an integer")
+        case Some(p) if p >= 0 & p <= 65335 => Right(p)
+        case Some(p) => Left(s"Invalid port $p is out of valid port range")
+    yield (port)
+
   val config = for
-    id <- id
-    name <- lightSensorName
+    id <- parse("ID")(default = "light-sensor")
+    name <- parse("NAME")("Light Sensor")
     updateRate <- updateRate
     port <- port(default = 8080)
     serverAddress <- serverAddress(default = None)
-    config <- ConfigChecker(id = id, name = name, updateRate = updateRate).left.map(_.message)
-  yield (config, port, serverAddress)
+    serverDiscoveryPort <- serverDiscoveryPort(default = 30000)
+    discoveryBroadcastAddress <- parse("DISCOVERY_BROADCAST_ADDR")(default =
+      "255.255.255.255"
+    )
+    config <- ConfigChecker(id = id, name = name, updateRate = updateRate).left
+      .map(_.message)
+  yield (
+    config,
+    port,
+    serverAddress,
+    serverDiscoveryPort,
+    discoveryBroadcastAddress
+  )
 
   config match
     case Left(err: String) =>
       Console.err.println(err)
       sys.exit(1)
-    case Right((config, port, serverAddress)) =>
+    case Right(
+          (
+            config,
+            port,
+            serverAddress,
+            serverDiscoveryPort,
+            discoveryBroadcastAddress
+          )
+        ) =>
       val id = config.id
       val name = config.name
       val updateRate = config.updateRate
       val ec = ExecutionContext.global
 
       val sensor = LightSensor(id, name)
-      val sensorAgent = LightSensorAgent(new ServerComunicationProtocolHttpAdapter(id)(using ec), sensor, 50, updateRate)
+      val sensorAgent = LightSensorAgent(
+        new ServerComunicationProtocolHttpAdapter(
+          id,
+          name = name,
+          announcePort = serverDiscoveryPort,
+          discoveryBroadcastAddress = discoveryBroadcastAddress
+        )(using ec),
+        sensor,
+        periodMs = 50,
+        updateRate,
+        announceEveryMs = 5000
+      )
       serverAddress.foreach(sensorAgent.registerToServer(_))
       sensorAgent.start()
 

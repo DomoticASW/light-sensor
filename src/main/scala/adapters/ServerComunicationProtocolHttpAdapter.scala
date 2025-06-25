@@ -13,8 +13,19 @@ import scala.concurrent.Future
 import domoticasw.DomoticASW
 import DomoticASW.*
 import upickle.core.Visitor
+import scala.util.Using
+import java.net.DatagramSocket
+import java.net.InetAddress
+import java.net.DatagramPacket
+import java.nio.charset.StandardCharsets
 
-class ServerComunicationProtocolHttpAdapter(id: String)(using ExecutionContext) extends ServerComunicationProtocol:
+class ServerComunicationProtocolHttpAdapter(
+    id: String,
+    name: String,
+    announcePort: Int,
+    discoveryBroadcastAddress: String
+)(using ExecutionContext)
+    extends ServerComunicationProtocol:
   given Writer[Color] = Writer.derived
   given Writer[DomoticASW.ActualTypes] with
     def write0[V](out: Visitor[?, V], v: ActualTypes): V =
@@ -35,11 +46,11 @@ class ServerComunicationProtocolHttpAdapter(id: String)(using ExecutionContext) 
   ) derives Writer
 
   case class EventItem(
-    event: String
+      event: String
   ) derives Writer
 
   case class LightSensorState(
-    state: String
+      state: String
   )
 
   var prevState: Option[LightSensorState] = None
@@ -60,7 +71,10 @@ class ServerComunicationProtocolHttpAdapter(id: String)(using ExecutionContext) 
       )
       .map(_ => ())
 
-  override def updateState(address: ServerAddress, state: LightState): Future[Unit] =
+  override def updateState(
+      address: ServerAddress,
+      state: LightState
+  ): Future[Unit] =
     val currentState = LightSensorState(state.name)
 
     prevState match
@@ -68,7 +82,7 @@ class ServerComunicationProtocolHttpAdapter(id: String)(using ExecutionContext) 
       case _ =>
         prevState = Some(currentState)
         val updates = Seq(
-          UpdatePropertyItem("state", currentState.state),
+          UpdatePropertyItem("state", currentState.state)
         )
 
         quickRequest
@@ -84,3 +98,24 @@ class ServerComunicationProtocolHttpAdapter(id: String)(using ExecutionContext) 
             Future.failed(err)
           )
           .map(_ => ())
+
+  private case class AnnounceMessage(
+      id: String,
+      name: String,
+      announcePort: Int
+  ) derives Writer
+
+  override def announce(): Unit =
+    Using(DatagramSocket()): socket =>
+      socket.setBroadcast(true)
+      val data =
+        write(AnnounceMessage(id, name, announcePort))
+          .getBytes(StandardCharsets.UTF_8)
+      val broadcastAddress = InetAddress.getByName(discoveryBroadcastAddress)
+      val packet = new DatagramPacket(
+        data,
+        data.length,
+        broadcastAddress,
+        announcePort
+      )
+      socket.send(packet)

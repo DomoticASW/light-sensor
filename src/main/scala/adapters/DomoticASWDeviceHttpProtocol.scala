@@ -24,8 +24,8 @@ object DomoticASWDeviceHttpInterface:
   case class NotFound(message: String)
   case class RegisterBody(serverPort: Int)
 
-  def apply(host: String, port: Int, lightSensorAgent: LightSensorAgent)(
-    using a: ActorSystem[Any]
+  def apply(host: String, port: Int, lightSensorAgent: LightSensorAgent)(using
+      a: ActorSystem[Any]
   ): Future[ServerBinding] =
     Http()
       .newServerAt(host, port)
@@ -36,14 +36,19 @@ object DomoticASWDeviceHttpInterface:
           conn.handleWithAsyncHandler:
             concat(
               (path("register") & entity(as[RegisterBody]) & post): body =>
-                lightSensorAgent.registerToServer(ServerAddress(clientAddress.getHostName(), body.serverPort))
-                complete(StatusCodes.OK, lightSensorRegistration(lightSensorAgent))
+                lightSensorAgent.registerToServer(
+                  ServerAddress(clientAddress.getHostName(), body.serverPort)
+                )
+                complete(
+                  StatusCodes.OK,
+                  lightSensorRegistration(lightSensorAgent)
+                )
               ,
               path("check-status"):
                 complete(StatusCodes.OK)
             )
       }
-    .run()
+      .run()
 
   def lightSensorRegistration(a: LightSensorAgent) = DeviceRegistration(
     a.lightSensor.id,
@@ -125,7 +130,8 @@ object DomoticASWDeviceHttpInterface:
     given RootJsonFormat[TypeConstraints] = new RootJsonFormat {
       def read(json: JsValue): TypeConstraints =
         json.asJsObject().fields.get("constraint") match
-          case scala.None => deserializationError("expected field \"constraint\"")
+          case scala.None =>
+            deserializationError("expected field \"constraint\"")
           case Some(value) =>
             val fields = JsObject(json.asJsObject().fields - "constraint")
             value match

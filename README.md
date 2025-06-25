@@ -10,25 +10,29 @@ The following configurations can be passed to the container as environment varia
 
 For example `docker run -e NAME="MyLightSensor" -e UPDATE_RATE="1000" corradostortini2/domoticasw-light-sensor`
 
-| Variable name  | Default value | Explanation                                         | Admissible values    |
-|----------------|---------------|-----------------------------------------------------|----------------------|
-| ID             | light-sensor  | Light sensor id                                     | Any not empty string |
-| NAME           | Light sensor  | Light sensor name                                   | Any not empty string |
-| UPDATE_RATE    | 2000          | Light sensor state update interval (ms)             | Integers > 0         |
-| SERVER_ADDRESS | None          | Should be set if light sensor is already registered |                      |
-| PORT           | 8080          | Port on which the device will listen                | Any valid port       |
+| Variable name            | Default value   | Explanation                                          | Admissible values                               |
+| ------------------------ | --------------- | ---------------------------------------------------- | ----------------------------------------------- |
+| ID                       | light-sensor    | Light sensor id                                      | Any not empty string                            |
+| NAME                     | Light sensor    | Light sensor name                                    | Any not empty string                            |
+| UPDATE_RATE              | 2000            | Light sensor state update interval (ms)              | Integers > 0                                    |
+| DISCOVERY_BROADCAST_ADDR | 255.255.255.255 | Broadcast address to which send discovery announces  | Any valid broadcast address (ex: 192.168.1.255) |
+| SERVER_DISCOVERY_PORT    | 30000           | Port on which the server expects discovery announces | Any valid port                                  |
+| SERVER_ADDRESS           | None            | Should be set if light sensor is already registered  |                                                 |
+| PORT                     | 8080            | Port on which the device will listen                 | Any valid port                                  |
 
 ## Properties
 
 The properties of the light sensor are:
-  - state (The state of the perceived light, that can be: Light, Dim Light or Dark)
+
+- state (The state of the perceived light, that can be: Light, Dim Light or Dark)
 
 ## Events
 
 The events of the light sensor are:
-  - ToLight (Whenever the state property changes to light)
-  - ToDimLight (Whenever the state property changes to dim light)
-  - ToDark (Whenever the state property changes to dark)
+
+- ToLight (Whenever the state property changes to light)
+- ToDimLight (Whenever the state property changes to dim light)
+- ToDark (Whenever the state property changes to dark)
 
 ## Actions
 
