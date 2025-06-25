@@ -100,7 +100,7 @@ class ServerComunicationProtocolHttpAdapter(
           )
           .map(_ => ())
 
-  private case class AnnounceMessage(
+  case class AnnounceMessage(
       id: String,
       name: String,
       announcePort: Int
