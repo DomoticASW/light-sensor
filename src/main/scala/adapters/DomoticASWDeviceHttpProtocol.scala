@@ -37,7 +37,7 @@ object DomoticASWDeviceHttpInterface:
             concat(
               (path("register") & entity(as[RegisterBody]) & post): body =>
                 lightSensorAgent.registerToServer(
-                  ServerAddress(clientAddress.getHostName(), body.serverPort)
+                  ServerAddress(clientAddress.getAddress().getHostAddress(), body.serverPort)
                 )
                 complete(
                   StatusCodes.OK,
