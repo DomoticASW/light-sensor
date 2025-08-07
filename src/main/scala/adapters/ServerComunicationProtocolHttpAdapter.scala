@@ -57,7 +57,6 @@ class ServerComunicationProtocolHttpAdapter(
   var prevState: Option[LightSensorState] = None
 
   override def sendEvent(address: ServerAddress, e: Event): Future[Unit] =
-    println(write(EventItem(e.toString())))
     quickRequest
       .httpVersion(HttpVersion.HTTP_1_1)
       .post(

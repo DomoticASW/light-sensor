@@ -20,8 +20,8 @@ import domain.LightSensor.Event
 
 object DomoticASWDeviceHttpInterface:
   import Marshalling.given
-  case class BadRequest(message: String)
-  case class NotFound(message: String)
+  case class BadRequest(cause: String)
+  case class NotFound(cause: String)
   case class RegisterBody(serverPort: Int)
 
   def apply(host: String, port: Int, lightSensorAgent: LightSensorAgent)(using
@@ -37,7 +37,7 @@ object DomoticASWDeviceHttpInterface:
             concat(
               (path("register") & entity(as[RegisterBody]) & post): body =>
                 lightSensorAgent.registerToServer(
-                  ServerAddress(clientAddress.getAddress().getHostAddress(), body.serverPort)
+                  ServerAddress(clientAddress.getHostName(), body.serverPort)
                 )
                 complete(
                   StatusCodes.OK,
