@@ -24,7 +24,8 @@ class ServerComunicationProtocolHttpAdapter(
     name: String,
     clientPort: Int,
     announcePort: Int,
-    discoveryBroadcastAddress: String
+    discoveryBroadcastAddress: String,
+    lanHostname: String
 )(using ExecutionContext)
     extends ServerComunicationProtocol:
   given Writer[Color] = Writer.derived
@@ -102,6 +103,7 @@ class ServerComunicationProtocolHttpAdapter(
   case class AnnounceMessage(
       id: String,
       name: String,
+      lanHostname: String,
       port: Int
   ) derives Writer
 
@@ -109,7 +111,7 @@ class ServerComunicationProtocolHttpAdapter(
     Using(DatagramSocket()): socket =>
       socket.setBroadcast(true)
       val data =
-        write(AnnounceMessage(id, name, clientPort))
+        write(AnnounceMessage(id, name, lanHostname, clientPort))
           .getBytes(StandardCharsets.UTF_8)
       val broadcastAddress = InetAddress.getByName(discoveryBroadcastAddress)
       val packet = new DatagramPacket(
