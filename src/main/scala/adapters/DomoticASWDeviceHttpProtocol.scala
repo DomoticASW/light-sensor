@@ -44,6 +44,10 @@ object DomoticASWDeviceHttpInterface:
                   lightSensorRegistration(lightSensorAgent)
                 )
               ,
+              (path("unregister") & post):
+                lightSensorAgent.unregister()
+                complete(StatusCodes.OK)
+              ,
               path("check-status"):
                 complete(StatusCodes.OK)
             )

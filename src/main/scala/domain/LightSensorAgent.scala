@@ -39,6 +39,10 @@ class LightSensorAgent(
     synchronized:
       this.serverAddress = Some(serverAddress)
 
+  def unregister(): Unit =
+    synchronized:
+      this.serverAddress = None
+
   private var _shouldStop = false
   private def shouldStop: Boolean = synchronized { _shouldStop }
   def setShouldStop(): Unit = synchronized { _shouldStop = true }
